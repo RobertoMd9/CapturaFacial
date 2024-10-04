@@ -1,0 +1,65 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captura de Rostro</title>
+</head>
+<body>
+    <h1>Captura de Rostro</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+    <br>
+    <input type="text" id="name" placeholder="Introduce tu nombre">
+    <button id="capture">Capturar Imagen</button>
+    <button id="submit">Guardar Datos</button>
+
+    <script>
+        // Obtener el acceso a la cámara
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureButton = document.getElementById('capture');
+        const submitButton = document.getElementById('submit');
+        const context = canvas.getContext('2d');
+
+        // Solicitar acceso a la cámara
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error('Error al acceder a la cámara', err);
+            });
+
+        // Capturar la imagen del video
+        captureButton.addEventListener('click', () => {
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            alert('Imagen capturada, ahora puedes guardarla.');
+        });
+
+        // Subir la imagen capturada a la base de datos
+        submitButton.addEventListener('click', () => {
+            const name = document.getElementById('name').value;
+            canvas.toBlob(blob => {
+                const formData = new FormData();
+                formData.append('image', blob, 'captured-face.png');
+                formData.append('name', name);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(data => {
+                    alert(data);
+                })
+                .catch(error => {
+                    console.error('Error al subir la imagen:', error);
+                });
+            }, 'image/png');
+        });
+    </script>
+</body>
+</html>
